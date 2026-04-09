@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>GAMJUS NOTE · Dual Theme</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+        }
+
+        /* Light / Dark Variables */
+        :root {
+            --bg-gradient-start: #0a0f2a;
+            --bg-gradient-end: #020617;
+            --card-bg: rgba(18, 25, 45, 0.6);
+            --card-border: rgba(250, 204, 21, 0.25);
+            --text-primary: #f0f3ff;
+            --text-secondary: #cdd9ff;
+            --input-bg: #0f172ae6;
+            --input-border: #334155;
+            --sidebar-bg: rgba(8, 12, 30, 0.7);
+            --glass-border: 1px solid rgba(250, 204, 21, 0.2);
+            --note-card-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));
+            --btn-submit-bg: linear-gradient(95deg, #facc15, #ffb347);
+            --delete-btn-bg: rgba(239,68,68,0.2);
+            --delete-btn-border: #ef4444;
+            --theme-toggle-bg: #334155;
+            --clear-btn-bg: rgba(239,68,68,0.25);
+            --clear-btn-hover: #ef4444;
+            --admin-badge-bg: #facc15;
+            --admin-badge-color: #0f172a;
+        }
+
+        body.light {
+            --bg-gradient-start: #eef2ff;
+            --bg-gradient-end: #d9e2ef;
+            --card-bg: rgba(245, 248, 255, 0.8);
+            --card-border: rgba(250, 204, 21, 0.5);
+            --text-primary: #1e293b;
+            --text-secondary: #334155;
+            --input-bg: #ffffff;
+            --input-border: #cbd5e1;
+            --sidebar-bg: rgba(241, 245, 249, 0.85);
+            --glass-border: 1px solid rgba(250, 204, 21, 0.6);
+            --note-card-bg: linear-gradient(135deg, #ffffff, #f8fafc);
+            --btn-submit-bg: linear-gradient(95deg, #eab308, #f59e0b);
+            --delete-btn-bg: rgba(239,68,68,0.15);
+            --delete-btn-border: #dc2626;
+            --theme-toggle-bg: #cbd5e1;
+            --clear-btn-bg: rgba(220, 38, 38, 0.2);
+            --clear-btn-hover: #dc2626;
+            --admin-badge-bg: #facc15;
+            --admin-badge-color: #0f172a;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, var(--bg-gradient-start), var(--bg-gradient-end));
+            font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* login overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 2.5rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .login-card h2 {
+            background: linear-gradient(135deg, #FFE6B0, #FFB347);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 1.8rem;
+        }
+        .login-card input {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 2rem;
+            padding: 12px 18px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            width: 100%;
+        }
+        .login-card input:focus {
+            border-color: #facc15;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(250,204,21,0.3);
+        }
+        .login-btn {
+            background: var(--btn-submit-bg);
+            border: none;
+            border-radius: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            padding: 12px;
+            transition: 0.2s;
+            color: #0f172a;
+        }
+        .login-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px -5px #facc1566;
+        }
+        .error-msg { color: #f87171; margin-top: 10px; }
+
+        /* main layout */
+        .app-main {
+            display: none;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app-layout {
+            display: flex;
+            height: 100%;
+            width: 100%;
+        }
+        .sidebar-menu {
+            width: 280px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
+            border-right: var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            gap: 1.8rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .user-info {
+            text-align: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px dashed rgba(250,204,21,0.4);
+        }
+        .user-info i {
+            font-size: 2.8rem;
+            background: linear-gradient(145deg, #facc15, #ffae5a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px;
+            border-radius: 1.2rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.03);
+        }
+        body.light .menu-item {
+            background: rgba(0,0,0,0.02);
+        }
+        .menu-item i { width: 26px; }
+        .menu-item.active {
+            background: linear-gradient(95deg, #facc15, #ffb347);
+            color: #0a0f1e;
+            box-shadow: 0 6px 14px rgba(250,204,21,0.4);
+        }
+        .menu-item:hover:not(.active) {
+            background: rgba(250,204,21,0.2);
+            transform: translateX(6px);
+        }
+        .logout-side-btn {
+            margin-top: auto;
+            background: rgba(51, 65, 85, 0.6);
+            border: none;
+            padding: 12px;
+            border-radius: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            color: #ffd966;
+            transition: 0.2s;
+        }
+        .logout-side-btn:hover {
+            background: #ef4444cc;
+            color: white;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            background: var(--theme-toggle-bg);
+            backdrop-filter: blur(8px);
+            border: none;
+            border-radius: 3rem;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.03);
+            background: #facc15;
+            color: #0f172a;
+        }
+
+        /* right content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.8rem 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: #facc15 #1e293b;
+        }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-track { background: #1e293b; }
+        .main-content::-webkit-scrollbar-thumb { background: #facc15; border-radius: 8px; }
+
+        .panel { display: none; animation: fadeSlideUp 0.3s ease-out; }
+        .panel.active-panel { display: block; }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* glass card */
+        .glass-card, .game-sidebar, .notes-area {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: var(--glass-border);
+            padding: 1.3rem;
+        }
+        .game-card, .note-item, .sys-note-card, .personal-card {
+            background: var(--note-card-bg);
+            border-radius: 1.6rem;
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1rem;
+            border-left: 5px solid #facc15;
+            transition: all 0.3s;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+            color: var(--text-primary);
+        }
+        .game-card:hover, .note-item:hover, .sys-note-card:hover, .personal-card:hover {
+            transform: translateY(-4px);
+            border-left-color: #ffb347;
+        }
+        .note-content-text {
+            background: rgba(0,0,0,0.1);
+            padding: 10px 14px;
+            border-radius: 1.2rem;
+            margin: 10px 0;
+            border: 1px solid rgba(250,204,21,0.15);
+            line-height: 1.5;
+        }
+        .image-preview-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .img-preview {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid #facc15;
+        }
+        .img-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .img-preview button {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444dd;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+        }
+        .add-note-card, .sys-add-section, .personal-add-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1.8rem;
+            padding: 1.2rem;
+            margin: 1rem 0;
+        }
+        input, textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 1.3rem;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        input:focus, textarea:focus {
+            border-color: #facc15;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(250,204,21,0.2);
+        }
+        .btn-submit {
+            background: var(--btn-submit-bg);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 18px -6px #facc1566; }
+        .upload-btn {
+            background: #2d3a5ecc;
+            padding: 6px 18px;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+        }
+        .upload-btn:hover { background: #facc15; color: #0f172a; }
+        .role-badge {
+            background: #1e293b;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            border: 1px solid #facc1544;
+        }
+        /* Admin badge in light theme - more visible */
+        body.light .role-badge[data-role="admin"] {
+            background: var(--admin-badge-bg);
+            color: var(--admin-badge-color);
+            font-weight: bold;
+            border: 1px solid #facc15;
+            box-shadow: 0 0 4px #facc15;
+        }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        
+        /* =====  EDIT BUTTONS - EXTRA BRIGHT & BEAUTIFUL ===== */
+        .note-actions button, .edit-note-btn, .edit-sys, .edit-personal, .history-note-btn, .history-sys {
+            background: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            border-radius: 2rem;
+            padding: 6px 14px;
+            margin-left: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            color: #facc15;
+            box-shadow: 0 0 4px rgba(250,204,21,0.3);
+        }
+        .note-actions button:hover, .edit-note-btn:hover, .edit-sys:hover, .edit-personal:hover {
+            background: #facc15;
+            color: #0f172a;
+            transform: scale(1.05);
+            box-shadow: 0 0 12px #facc15;
+            border-color: #ffb347;
+        }
+        .history-note-btn:hover, .history-sys:hover {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 0 10px #3b82f6;
+        }
+        .del-note-btn, .del-sys, .del-personal, .del-game-btn {
+            background: rgba(239,68,68,0.2);
+            border: 1px solid #ef4444;
+            border-radius: 2rem;
+            padding: 6px 14px;
+            color: #ff9e9e;
+        }
+        .del-note-btn:hover, .del-sys:hover, .del-personal:hover, .del-game-btn:hover {
+            background: #ef4444;
+            color: white;
+            transform: scale(1.02);
+        }
+        
+        /* =====  CLEAR BUTTONS - HIGHLY VISIBLE (Bright) ===== */
+        #clearPersonalNotesBtn, #clearAllSysNotesBtn, #clearCurrentGameNotesBtn {
+            background: var(--clear-btn-bg);
+            border: 1px solid var(--delete-btn-border);
+            border-radius: 2rem;
+            padding: 8px 18px;
+            color: #ff8a8a;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        #clearPersonalNotesBtn:hover, #clearAllSysNotesBtn:hover, #clearCurrentGameNotesBtn:hover {
+            background: var(--clear-btn-hover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+            border-color: var(--clear-btn-hover);
+        }
+        /* Extra brightness for light theme */
+        body.light #clearPersonalNotesBtn, body.light #clearAllSysNotesBtn, body.light #clearCurrentGameNotesBtn {
+            background: rgba(220, 38, 38, 0.25);
+            border: 1px solid #dc2626;
+            color: #b91c1c;
+            font-weight: bold;
+        }
+        body.light #clearPersonalNotesBtn:hover, body.light #clearAllSysNotesBtn:hover, body.light #clearCurrentGameNotesBtn:hover {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 4px 12px #dc2626;
+        }
+        
+        /* Member table */
+        .member-table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
+        .member-table th { text-align: left; padding: 12px 8px; font-weight: 600; color: #facc15; border-bottom: 1px solid rgba(250,204,21,0.3); }
+        .member-table td { padding: 12px 8px; background: rgba(0, 0, 0, 0.2); border-radius: 1.2rem; }
+        .member-username-input { background: var(--input-bg); border: 1px solid #334155; border-radius: 2rem; padding: 8px 14px; color: var(--text-primary); width: 100%; max-width: 180px; }
+        .role-select { background: #1e293b; border: 1px solid #facc1566; border-radius: 2rem; padding: 6px 14px; color: #facc15; cursor: pointer; }
+        .action-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .action-btn { border: none; border-radius: 2rem; padding: 6px 16px; font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.1); color: var(--text-secondary); }
+        .action-btn.change-pwd { background: rgba(250, 204, 21, 0.2); border: 1px solid #facc15; color: #facc15; }
+        .action-btn.change-pwd:hover { background: #facc15; color: #0f172a; transform: translateY(-2px); }
+        .action-btn.delete-user { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #ff9e9e; }
+        .action-btn.delete-user:hover { background: #ef4444; color: white; transform: translateY(-2px); }
+        .current-game-title { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg, #FFE4B5, #FFD966); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        footer { text-align: center; margin-top: 2rem; opacity: 0.6; font-size: 0.7rem; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: #1e293b; border-radius: 2rem; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; padding: 1.8rem; border: 1px solid #facc15; color: #f0f3ff; }
+        .history-item { background: #0f172a; margin: 0.8rem 0; padding: 1rem; border-radius: 1.2rem; border-left: 3px solid #facc15; }
+        .restore-btn { background: #facc15; border: none; border-radius: 2rem; padding: 4px 14px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<button id="themeToggleBtn" class="theme-toggle"><i class="fas fa-moon"></i> <span id="themeText">Dark</span></button>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+        <h2><i class="fas fa-dice-d6"></i> GAMJUS NOTE</h2>
+        <p style="margin: 0.5rem 0;">Sign in to your journal</p>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button id="doLoginBtn" class="login-btn"><i class="fas fa-sign-in-alt"></i> Log in</button>
+        <div id="loginError" class="error-msg"></div>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appMain" class="app-main">
+    <div class="app-layout">
+        <div class="sidebar-menu">
+            <div class="user-info">
+                <i class="fas fa-ghost"></i>
+                <div id="sidebarUserName" style="font-weight: bold; margin-top: 5px;">Traveler</div>
+                <div id="sidebarUserRole" class="role-badge"></div>
+            </div>
+            <div class="menu-items">
+                <div class="menu-item" data-panel="gamePanel"><i class="fas fa-gamepad"></i> Game Notes</div>
+                <div class="menu-item" data-panel="sysPanel"><i class="fas fa-database"></i> System Notes</div>
+                <div class="menu-item" data-panel="personalPanel"><i class="fas fa-user-secret"></i> Personal Notes</div>
+                <div class="menu-item" id="adminPanelMenuItem" style="display:none;" data-panel="adminPanel"><i class="fas fa-users-cog"></i> Member Management</div>
+            </div>
+            <button id="logoutSideBtn" class="logout-side-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+
+        <div class="main-content">
+            <!-- GAME NOTES PANEL -->
+            <div id="gamePanel" class="panel">
+                <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <div class="game-sidebar" style="flex:1.2;">
+                        <div class="flex-between"><h3><i class="fas fa-folder-open"></i> Game Posts</h3><button id="createNewGameBtn" class="btn-submit" style="padding: 5px 16px;"><i class="fas fa-plus"></i> New Game</button></div>
+                        <div id="gameListContainer" class="game-list" style="margin-top: 1rem; max-height: 65vh; overflow-y: auto;">Loading...</div>
+                    </div>
+                    <div class="notes-area" style="flex:3;">
+                        <div class="flex-between"><h3 class="current-game-title" id="currentGameNameDisplay">✨ No game selected</h3><span id="currentNoteCount" class="role-badge">Notes 0</span></div>
+                        <div class="add-note-card">
+                            <input type="text" id="noteTitleInput" placeholder="✨ Note title">
+                            <textarea id="noteContentInput" rows="2" placeholder="📝 Note content..."></textarea>
+                            <label class="upload-btn"><i class="fas fa-camera"></i> Upload images <input type="file" id="gameNoteImages" accept="image/*" multiple style="display:none;"></label>
+                            <div id="gameImagesPreview" class="image-preview-area"></div>
+                            <button id="addNoteBtn" class="btn-submit"><i class="fas fa-save"></i> Save Note</button>
+                        </div>
+                        <div id="notesListContainer" class="notes-list" style="max-height: 55vh; overflow-y: auto;"></div>
+                        <button id="clearCurrentGameNotesBtn"><i class="fas fa-trash-alt"></i> Clear current game notes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SYSTEM NOTES PANEL -->
+            <div id="sysPanel" class="panel">
+                <div class="glass-card">
+                    <h3><i class="fas fa-microchip"></i> System Notes</h3>
+                    <div class="sys-add-section">
+                        <input type="text" id="sysNoteTitle" placeholder="System note title">
+                        <textarea id="sysNoteContent" rows="2" placeholder="Content..."></textarea>
+                        <label class="upload-btn"><i class="fas fa-image"></i> Upload images <input type="file" id="sysNoteImages" accept="image/*" multiple style="display:none;"></label>
+                        <div id="sysImagesPreview" class="image-preview-area"></div>
+                        <button id="addSysNoteBtn" class="btn-submit"><i class="fas fa-plus-circle"></i> Add System Note</button>
+                    </div>
+                    <div id="sysNotesList" class="sys-notes-list" style="max-height: 55vh; overflow-y: auto;"></div>
+                    <button id="clearAllSysNotesBtn"><i class="fas fa-database"></i> Clear all system notes</button>
+                </div>
+            </div>
+
+            <!-- PERSONAL NOTES PANEL -->
+            <div id="personalPanel" class="panel">
+                <div class="glass-card">
+                    <h3><i class="fas fa-user-secret"></i> Personal Journal</h3>
+                    <div class="personal-add-section">
+                        <input type="text" id="personalNoteTitle" placeholder="Title">
+                        <textarea id="personalNoteContent" rows="2" placeholder="Your private thoughts..."></textarea>
+                        <label class="upload-btn"><i class="fas fa-upload"></i> Add images <input type="file" id="personalNoteImages" accept="image/*" multiple style="display:none;"></label>
+                        <div id="personalImagesPreview" class="image-preview-area"></div>
+                        <button id="addPersonalNoteBtn" class="btn-submit"><i class="fas fa-feather-alt"></i> Save Personal Note</button>
+                    </div>
+                    <div id="personalNotesList" class="personal-notes-list" style="max-height: 55vh; overflow-y: auto;"></div>
+                    <button id="clearPersonalNotesBtn"><i class="fas fa-trash-alt"></i> Clear my personal notes</button>
+                </div>
+            </div>
+
+            <!-- ADMIN PANEL: MEMBER MANAGEMENT -->
+            <div id="adminPanel" class="panel">
+                <div class="glass-card">
+                    <h3><i class="fas fa-user-shield"></i> Member Management</h3>
+                    <div style="background: rgba(0,0,0,0.25); border-radius: 1.5rem; padding: 1rem; margin: 1rem 0;">
+                        <h4>Add new member</h4>
+                        <input type="text" id="newMemberUsername" placeholder="Username" style="width:30%;">
+                        <input type="text" id="newMemberPassword" placeholder="Password" style="width:30%;">
+                        <select id="newMemberRole" class="role-select"><option value="member">Member</option><option value="admin">Admin</option></select>
+                        <button id="addMemberBtn" class="btn-submit" style="margin-left: 8px;">Add</button>
+                    </div>
+                    <table class="member-table"><thead><tr><th>Username</th><th>Role</th><th>Actions</th></tr></thead><tbody id="memberTableBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div id="historyModal" class="modal"><div class="modal-content"><div class="flex-between"><h3><i class="fas fa-history"></i> Version History</h3><button id="closeHistoryModal" style="background:none; border:none; color:white; font-size:1.8rem;">&times;</button></div><div id="historyList"></div></div></div>
+
+<script>
+    // ---------- DATA & FULL FUNCTIONALITY (SAME AS BEFORE, WITH ENHANCED UI) ----------
+    let currentUser = null;
+    let users = [];
+    let gameNotes = [];
+    let sysNotes = [];
+    let personalNotes = [];
+    let currentGame = null;
+    let tempGameImages = [], tempSysImages = [], tempPersonalImages = [];
+
+    function saveAll() {
+        localStorage.setItem('game_notes_users', JSON.stringify(users));
+        localStorage.setItem('game_notes_app_v10', JSON.stringify(gameNotes));
+        localStorage.setItem('sys_notes_app_v10', JSON.stringify(sysNotes));
+        localStorage.setItem('personal_notes_app_v10', JSON.stringify(personalNotes));
+    }
+
+    function initData() {
+        const storedUsers = localStorage.getItem('game_notes_users');
+        if(storedUsers) users = JSON.parse(storedUsers);
+        else users = [{ id: 1, username: "Gemini", password: "112233", role: "admin" }, { id: 2, username: "gamer", password: "game123", role: "member" }];
+        const adminExists = users.find(u => u.username === "Gemini");
+        if (!adminExists) users.push({ id: Date.now(), username: "Gemini", password: "112233", role: "admin" });
+        else { adminExists.password = "112233"; adminExists.role = "admin"; }
+        const storedGame = localStorage.getItem('game_notes_app_v10');
+        if(storedGame) gameNotes = JSON.parse(storedGame);
+        else { const now=Date.now(); gameNotes = [{ id:now-100000, gameName:"🔥 Elden Ring", noteTitle:"Malenia Notes", content:"Waterfowl dance dodge strategy", images:[], createdAt:now-100000, lastEditedBy:"Gemini", lastEditedAt:now-100000, history:[] }]; gameNotes[0].history = [{ version:1, title:"Malenia Notes", content:"Waterfowl dance dodge strategy", images:[], editedBy:"Gemini", editedAt:now-100000, action:"Create" }]; }
+        const storedSys = localStorage.getItem('sys_notes_app_v10');
+        if(storedSys) sysNotes = JSON.parse(storedSys);
+        else { const now=Date.now(); sysNotes = [{ id:now-20000, title:"✨ System Guide", content:"Track your progress with images", images:[], createdAt:now-20000, lastEditedBy:"Gemini", lastEditedAt:now-20000, history:[] }]; sysNotes[0].history = [{ version:1, title:"✨ System Guide", content:"Track your progress with images", images:[], editedBy:"Gemini", editedAt:now-20000, action:"Create" }]; }
+        const storedPersonal = localStorage.getItem('personal_notes_app_v10');
+        if(storedPersonal) personalNotes = JSON.parse(storedPersonal);
+        else personalNotes = [];
+        saveAll();
+    }
+
+    function pushHistory(type, targetId, snapshot, editor, action="Edit") {
+        let target = type === 'game' ? gameNotes.find(g=>g.id===targetId) : sysNotes.find(s=>s.id===targetId);
+        if(!target) return;
+        if(!target.history) target.history = [];
+        const version = target.history.length + 1;
+        target.history.push({ version, ...snapshot, editedBy: editor, editedAt: Date.now(), action });
+        if(target.history.length>30) target.history.shift();
+        target.lastEditedBy = editor; target.lastEditedAt = Date.now();
+        saveAll();
+    }
+
+    function revertToVersion(type, id, versionIndex) {
+        if(currentUser?.role !== 'admin') { alert("Only admin can revert"); return; }
+        let target = type === 'game' ? gameNotes.find(g=>g.id===id) : sysNotes.find(s=>s.id===id);
+        if(!target || !target.history[versionIndex]) return;
+        const ver = target.history[versionIndex];
+        const oldSnapshot = { title: target.noteTitle || target.title, content: target.content, images: [...(target.images||[])] };
+        if(type === 'game') { target.noteTitle = ver.title; target.content = ver.content; target.images = ver.images ? [...ver.images] : []; }
+        else { target.title = ver.title; target.content = ver.content; target.images = ver.images ? [...ver.images] : []; }
+        pushHistory(type, id, oldSnapshot, currentUser.username, `Revert to version ${ver.version}`);
+        saveAll(); renderAllUI();
+        alert(`Restored to version ${ver.version}`);
+    }
+
+    function showHistory(type, id) {
+        let target = type === 'game' ? gameNotes.find(g=>g.id===id) : sysNotes.find(s=>s.id===id);
+        if(!target || !target.history) return;
+        const modal = document.getElementById('historyModal'), container = document.getElementById('historyList');
+        if(!target.history.length) { container.innerHTML='<div>No history versions</div>'; modal.style.display='flex'; return; }
+        container.innerHTML = '';
+        [...target.history].reverse().forEach((h, idx) => {
+            const div = document.createElement('div'); div.className='history-item';
+            div.innerHTML = `<div><strong>📌 Version ${h.version}</strong> (${h.action}) by ${h.editedBy} ${new Date(h.editedAt).toLocaleString()}</div>
+            <div>Title: ${escapeHtml(h.title)}</div><div>Preview: ${escapeHtml(h.content.substring(0,80))}</div>
+            ${currentUser.role==='admin' ? `<button class="restore-btn" data-idx="${target.history.length-1-idx}"><i class="fas fa-undo-alt"></i> Revert to this version</button>` : ''}`;
+            if(currentUser.role==='admin') div.querySelector('.restore-btn').addEventListener('click',()=>{ if(confirm(`Revert to version ${h.version}?`)) revertToVersion(type, id, target.history.length-1-idx); modal.style.display='none'; });
+            container.appendChild(div);
+        });
+        modal.style.display='flex';
+    }
+
+    // Game notes render (keeping full functionality)
+    function renderGameSidebar() { 
+        const map=new Map(); gameNotes.forEach(g=>map.set(g.gameName, (map.get(g.gameName)||0)+1));
+        const games = Array.from(map.entries()).map(([n,c])=>({name:n,count:c}));
+        const container = document.getElementById('gameListContainer');
+        if(!games.length){ container.innerHTML='<div style="padding:1rem;">✨ No games yet, create one</div>'; return; }
+        container.innerHTML='';
+        games.forEach(game=>{
+            const card = document.createElement('div'); card.className='game-card';
+            card.innerHTML = `<div><strong><i class="fas fa-crown"></i> ${escapeHtml(game.name)}</strong><div style="font-size:0.7rem;">📖 ${game.count} notes</div></div><button class="del-game-btn" data-name="${escapeHtmlAttr(game.name)}" style="background:none; border:none; color:#ffaa88;"><i class="fas fa-trash-alt"></i></button>`;
+            card.addEventListener('click',(e)=>{ if(!e.target.closest('.del-game-btn')) { currentGame=game.name; renderAllUI(); } });
+            card.querySelector('.del-game-btn').addEventListener('click',(e)=>{ e.stopPropagation(); if(confirm(`Delete game "${game.name}" and all its notes?`)){ gameNotes=gameNotes.filter(n=>n.gameName!==game.name); saveAll(); if(currentGame===game.name) currentGame=games[0]?.name||null; renderAllUI(); } });
+            if(currentGame===game.name) card.style.borderLeftColor = '#ffb347';
+            container.appendChild(card);
+        });
+    }
+    function renderGameNotes() {
+        if(!currentGame) { document.getElementById('notesListContainer').innerHTML='<div style="padding:2rem; text-align:center;">🎮 Select a game on the left</div>'; document.getElementById('currentGameNameDisplay').innerHTML='✨ No game selected'; return; }
+        const filtered = gameNotes.filter(n=>n.gameName===currentGame).sort((a,b)=>b.lastEditedAt - a.lastEditedAt);
+        document.getElementById('currentGameNameDisplay').innerHTML = `<i class="fas fa-dice-d6"></i> ${escapeHtml(currentGame)}`;
+        document.getElementById('currentNoteCount').innerText = `📌 ${filtered.length} notes`;
+        const container = document.getElementById('notesListContainer');
+        if(!filtered.length){ container.innerHTML='<div style="padding:2rem; text-align:center;">✨ No notes yet</div>'; return; }
+        container.innerHTML='';
+        filtered.forEach(note=>{
+            const div = document.createElement('div'); div.className='note-item';
+            div.innerHTML = `<div class="flex-between"><strong><i class="fas fa-feather-alt"></i> ${escapeHtml(note.noteTitle)}</strong><div class="note-actions"><button class="edit-note-btn" data-id="${note.id}"><i class="fas fa-edit"></i> Edit</button><button class="history-note-btn" data-id="${note.id}"><i class="fas fa-history"></i> History</button><button class="del-note-btn" data-id="${note.id}"><i class="fas fa-trash"></i> Delete</button></div></div>
+            <div class="note-content-text">${escapeHtml(note.content)}</div>
+            <div class="image-preview-area">${(note.images||[]).map(img=>`<div class="img-preview"><img src="${img}"></div>`).join('')}</div>
+            <div style="font-size:0.7rem;"><i class="fas fa-user-pen"></i> Last edit by ${escapeHtml(note.lastEditedBy)} · ${new Date(note.lastEditedAt).toLocaleString()}</div>`;
+            div.querySelector('.edit-note-btn').addEventListener('click',()=>editGameNote(note.id));
+            div.querySelector('.history-note-btn').addEventListener('click',()=>showHistory('game',note.id));
+            div.querySelector('.del-note-btn').addEventListener('click',()=>{ if(confirm('Delete this note?')){ gameNotes=gameNotes.filter(n=>n.id!==note.id); saveAll(); renderAllUI(); } });
+            container.appendChild(div);
+        });
+    }
+    function editGameNote(id) { 
+        const note = gameNotes.find(n=>n.id===id);
+        if(!note) return;
+        const choice = prompt("Choose what to edit:\n1. Title\n2. Content\n(Enter 1 or 2)", "1");
+        if(choice === null) return;
+        if(choice === "1") {
+            const newTitle = prompt("Enter new title", note.noteTitle);
+            if(newTitle !== null && newTitle.trim() !== "") {
+                const oldSnap = { title: note.noteTitle, content: note.content, images: [...(note.images||[])] };
+                note.noteTitle = newTitle.trim();
+                pushHistory('game', id, oldSnap, currentUser.username, "Edit title");
+                saveAll(); renderAllUI();
+            } else if(newTitle !== null) alert("Title cannot be empty");
+        } else if(choice === "2") {
+            const newContent = prompt("Enter new content", note.content);
+            if(newContent !== null && newContent.trim() !== "") {
+                const oldSnap = { title: note.noteTitle, content: note.content, images: [...(note.images||[])] };
+                note.content = newContent.trim();
+                pushHistory('game', id, oldSnap, currentUser.username, "Edit content");
+                saveAll(); renderAllUI();
+            } else if(newContent !== null) alert("Content cannot be empty");
+        } else alert("Invalid choice");
+    }
+    function addGameNote() { if(!currentGame) return alert("Please select a game"); const title = document.getElementById('noteTitleInput').value.trim(); const content = document.getElementById('noteContentInput').value.trim(); if(!title || !content) return alert("Title and content required"); const newId = Date.now(); const newNote = { id:newId, gameName:currentGame, noteTitle:title, content:content, images:[...tempGameImages], createdAt:Date.now(), lastEditedBy:currentUser.username, lastEditedAt:Date.now(), history:[] }; pushHistory('game', newId, { title, content, images:[...tempGameImages] }, currentUser.username, "Create"); gameNotes.push(newNote); saveAll(); document.getElementById('noteTitleInput').value=''; document.getElementById('noteContentInput').value=''; tempGameImages=[]; document.getElementById('gameImagesPreview').innerHTML=''; renderAllUI(); }
+    function renderSysNotes() { const container = document.getElementById('sysNotesList'); if(!sysNotes.length){ container.innerHTML='<div>No system notes</div>'; return; } container.innerHTML=''; sysNotes.sort((a,b)=>b.lastEditedAt - a.lastEditedAt).forEach(n=>{ const div = document.createElement('div'); div.className='sys-note-card'; div.innerHTML = `<div class="flex-between"><strong><i class="fas fa-database"></i> ${escapeHtml(n.title)}</strong><div class="note-actions"><button class="edit-sys" data-id="${n.id}"><i class="fas fa-edit"></i> Edit</button><button class="history-sys" data-id="${n.id}"><i class="fas fa-history"></i> History</button><button class="del-sys" data-id="${n.id}"><i class="fas fa-trash"></i> Delete</button></div></div><div class="note-content-text">${escapeHtml(n.content)}</div><div class="image-preview-area">${(n.images||[]).map(img=>`<div class="img-preview"><img src="${img}"></div>`).join('')}</div><div style="font-size:0.7rem;">📅 ${new Date(n.lastEditedAt).toLocaleString()} by ${escapeHtml(n.lastEditedBy)}</div>`; div.querySelector('.edit-sys').addEventListener('click',()=>editSysNote(n.id)); div.querySelector('.history-sys').addEventListener('click',()=>showHistory('sys',n.id)); div.querySelector('.del-sys').addEventListener('click',()=>{ if(confirm('Delete system note?')){ sysNotes=sysNotes.filter(s=>s.id!==n.id); saveAll(); renderAllUI(); } }); container.appendChild(div); }); }
+    function editSysNote(id) { const note = sysNotes.find(s=>s.id===id); if(!note) return; const choice = prompt("Choose what to edit:\n1. Title\n2. Content\n(Enter 1 or 2)", "1"); if(choice === "1") { const newTitle = prompt("Enter new title", note.title); if(newTitle && newTitle.trim()){ const oldSnap = { title: note.title, content: note.content, images: [...(note.images||[])] }; note.title = newTitle.trim(); pushHistory('sys', id, oldSnap, currentUser.username, "Edit title"); saveAll(); renderAllUI(); } } else if(choice === "2") { const newContent = prompt("Enter new content", note.content); if(newContent && newContent.trim()){ const oldSnap = { title: note.title, content: note.content, images: [...(note.images||[])] }; note.content = newContent.trim(); pushHistory('sys', id, oldSnap, currentUser.username, "Edit content"); saveAll(); renderAllUI(); } } }
+    function addSysNote() { const title = document.getElementById('sysNoteTitle').value.trim(); const content = document.getElementById('sysNoteContent').value.trim(); if(!title || !content) return alert("Fill fields"); const newId = Date.now(); const newNote = { id:newId, title, content, images:[...tempSysImages], createdAt:Date.now(), lastEditedBy:currentUser.username, lastEditedAt:Date.now(), history:[] }; pushHistory('sys', newId, { title, content, images:[...tempSysImages] }, currentUser.username, "Create"); sysNotes.push(newNote); saveAll(); document.getElementById('sysNoteTitle').value=''; document.getElementById('sysNoteContent').value=''; tempSysImages=[]; document.getElementById('sysImagesPreview').innerHTML=''; renderAllUI(); }
+    function renderPersonalNotes() { let filtered = personalNotes.filter(p => (currentUser.role === 'admin' || p.userId === currentUser.id)); filtered.sort((a,b)=>b.lastEditedAt - a.lastEditedAt); const container = document.getElementById('personalNotesList'); if(!filtered.length){ container.innerHTML='<div>No personal notes</div>'; return; } container.innerHTML=''; filtered.forEach(p=>{ const div = document.createElement('div'); div.className='personal-card'; div.innerHTML = `<div class="flex-between"><strong><i class="fas fa-lock"></i> ${escapeHtml(p.title)}</strong><div class="note-actions"><button class="edit-personal" data-id="${p.id}"><i class="fas fa-edit"></i> Edit</button><button class="del-personal" data-id="${p.id}"><i class="fas fa-trash"></i> Delete</button></div></div><div class="note-content-text">${escapeHtml(p.content)}</div><div class="image-preview-area">${(p.images||[]).map(img=>`<div class="img-preview"><img src="${img}"></div>`).join('')}</div><div style="font-size:0.7rem;">👤 ${escapeHtml(p.username)} · ${new Date(p.lastEditedAt).toLocaleString()}</div>`; div.querySelector('.edit-personal').addEventListener('click',()=>editPersonalNote(p.id)); div.querySelector('.del-personal').addEventListener('click',()=>{ if(confirm('Delete personal note?')){ personalNotes=personalNotes.filter(n=>n.id!==p.id); saveAll(); renderAllUI(); } }); container.appendChild(div); }); }
+    function editPersonalNote(id) { const note = personalNotes.find(p=>p.id===id); if(!note || (note.userId !== currentUser.id && currentUser.role !== 'admin')) return alert("No permission"); const choice = prompt("Choose what to edit:\n1. Title\n2. Content\n(Enter 1 or 2)", "1"); if(choice === "1") { const newTitle = prompt("Enter new title", note.title); if(newTitle && newTitle.trim()){ note.title = newTitle.trim(); note.lastEditedAt = Date.now(); saveAll(); renderAllUI(); } } else if(choice === "2") { const newContent = prompt("Enter new content", note.content); if(newContent && newContent.trim()){ note.content = newContent.trim(); note.lastEditedAt = Date.now(); saveAll(); renderAllUI(); } } }
+    function addPersonalNote() { const title = document.getElementById('personalNoteTitle').value.trim(); const content = document.getElementById('personalNoteContent').value.trim(); if(!title || !content) return alert("Fill fields"); const newId = Date.now(); personalNotes.push({ id:newId, userId:currentUser.id, username:currentUser.username, title, content, images:[...tempPersonalImages], createdAt:Date.now(), lastEditedAt:Date.now() }); saveAll(); document.getElementById('personalNoteTitle').value=''; document.getElementById('personalNoteContent').value=''; tempPersonalImages=[]; document.getElementById('personalImagesPreview').innerHTML=''; renderAllUI(); }
+    function clearPersonalNotes() { if(confirm("Clear all your personal notes?")){ personalNotes = personalNotes.filter(p => !(p.userId === currentUser.id)); saveAll(); renderAllUI(); } }
+    function renderMemberTable() { if(currentUser?.role !== 'admin') return; const tbody = document.getElementById('memberTableBody'); tbody.innerHTML = ''; users.forEach(user => { const tr = document.createElement('tr'); const usernameCell = document.createElement('td'); const inp = document.createElement('input'); inp.type = 'text'; inp.value = user.username; inp.className = 'member-username-input'; inp.addEventListener('change', (e) => { let val = e.target.value.trim(); if(val && !users.some(u=>u.username===val && u.id!==user.id)){ user.username = val; saveAll(); renderMemberTable(); } else renderMemberTable(); }); usernameCell.appendChild(inp); const roleCell = document.createElement('td'); const sel = document.createElement('select'); sel.className = 'role-select'; sel.innerHTML = `<option value="member" ${user.role==='member'?'selected':''}>Member</option><option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>`; sel.addEventListener('change', (e) => { user.role = e.target.value; saveAll(); if(currentUser.id === user.id) currentUser.role = user.role; renderAllUI(); }); roleCell.appendChild(sel); const actionsCell = document.createElement('td'); const div = document.createElement('div'); div.className = 'action-group'; const pwdBtn = document.createElement('button'); pwdBtn.className = 'action-btn change-pwd'; pwdBtn.innerHTML = '<i class="fas fa-key"></i> Change pwd'; pwdBtn.onclick = () => { const np = prompt("New password"); if(np && np.trim()){ user.password = np.trim(); saveAll(); alert("Updated"); } }; div.appendChild(pwdBtn); if(user.id !== currentUser.id){ const delBtn = document.createElement('button'); delBtn.className = 'action-btn delete-user'; delBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete'; delBtn.onclick = () => { if(confirm(`Delete ${user.username}?`)){ users = users.filter(u=>u.id!==user.id); saveAll(); renderAllUI(); } }; div.appendChild(delBtn); } actionsCell.appendChild(div); tr.appendChild(usernameCell); tr.appendChild(roleCell); tr.appendChild(actionsCell); tbody.appendChild(tr); }); }
+    function addMember() { const un = document.getElementById('newMemberUsername').value.trim(); const pw = document.getElementById('newMemberPassword').value.trim(); const role = document.getElementById('newMemberRole').value; if(!un || !pw) return alert("Required"); if(users.some(u=>u.username===un)) return alert("Exists"); users.push({ id: Date.now(), username: un, password: pw, role }); saveAll(); renderMemberTable(); document.getElementById('newMemberUsername').value=''; document.getElementById('newMemberPassword').value=''; }
+    function clearCurrentGameNotes() { if(!currentGame) return; if(confirm(`Clear all notes for "${currentGame}"?`)){ gameNotes=gameNotes.filter(n=>n.gameName!==currentGame); saveAll(); renderAllUI(); } }
+    function clearAllSysNotes() { if(confirm("Clear all system notes?")){ sysNotes=[]; saveAll(); renderAllUI(); } }
+
+    function renderAllUI() {
+        if(!currentUser) return;
+        document.getElementById('sidebarUserName').innerText = currentUser.username;
+        const roleBadge = document.getElementById('sidebarUserRole');
+        roleBadge.innerText = currentUser.role==='admin' ? 'Admin' : 'Member';
+        if(currentUser.role === 'admin') {
+            roleBadge.setAttribute('data-role', 'admin');
+        } else {
+            roleBadge.removeAttribute('data-role');
+        }
+        const adminMenuItem = document.getElementById('adminPanelMenuItem');
+        if(currentUser.role === 'admin') adminMenuItem.style.display = 'flex';
+        else adminMenuItem.style.display = 'none';
+        renderGameSidebar(); renderGameNotes(); renderSysNotes(); renderPersonalNotes();
+        if(currentUser.role === 'admin') renderMemberTable();
+        const activePanel = document.querySelector('.panel.active-panel')?.id || 'gamePanel';
+        document.querySelectorAll('.menu-item').forEach(item => { if(item.dataset.panel === activePanel) item.classList.add('active'); else item.classList.remove('active'); });
+    }
+
+    function setupMenuTabs() { document.querySelectorAll('.menu-item').forEach(item => { item.addEventListener('click',()=>{ const target = item.dataset.panel; document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active-panel')); document.getElementById(target).classList.add('active-panel'); document.querySelectorAll('.menu-item').forEach(i=>i.classList.remove('active')); item.classList.add('active'); if(target === 'adminPanel' && currentUser.role === 'admin') renderMemberTable(); }); }); if(!document.querySelector('.panel.active-panel')) document.getElementById('gamePanel').classList.add('active-panel'); }
+    function handleImageUpload(files, previewContainer, targetArray) { Array.from(files).forEach(file => { const reader = new FileReader(); reader.onload = e => { targetArray.push(e.target.result); const div = document.createElement('div'); div.className='img-preview'; div.innerHTML = `<img src="${e.target.result}"><button class="remove-img">✖</button>`; div.querySelector('.remove-img').addEventListener('click',()=>{ const idx = targetArray.indexOf(e.target.result); if(idx!==-1) targetArray.splice(idx,1); div.remove(); }); previewContainer.appendChild(div); }; reader.readAsDataURL(file); }); }
+    function bindImageUploads() { document.getElementById('gameNoteImages').onchange = (e)=>handleImageUpload(e.target.files, document.getElementById('gameImagesPreview'), tempGameImages); document.getElementById('sysNoteImages').onchange = (e)=>handleImageUpload(e.target.files, document.getElementById('sysImagesPreview'), tempSysImages); document.getElementById('personalNoteImages').onchange = (e)=>handleImageUpload(e.target.files, document.getElementById('personalImagesPreview'), tempPersonalImages); }
+
+    function doLogin() { const un = document.getElementById('loginUsername').value.trim(); const pw = document.getElementById('loginPassword').value.trim(); const user = users.find(u=>u.username===un && u.password===pw); if(user){ currentUser = { id:user.id, username:user.username, role:user.role }; sessionStorage.setItem('currentUser', JSON.stringify(currentUser)); document.getElementById('loginOverlay').style.display='none'; document.getElementById('appMain').style.display='flex'; renderAllUI(); } else document.getElementById('loginError').innerText = 'Invalid credentials'; }
+    function logout() { sessionStorage.removeItem('currentUser'); currentUser=null; document.getElementById('loginOverlay').style.display='flex'; document.getElementById('appMain').style.display='none'; }
+
+    function bindEvents() {
+        document.getElementById('doLoginBtn').onclick = doLogin;
+        document.getElementById('logoutSideBtn').onclick = logout;
+        document.getElementById('createNewGameBtn').onclick = () => { let name = prompt("New game name"); if(name&&name.trim()){ if(!gameNotes.some(g=>g.gameName===name.trim())){ currentGame=name.trim(); renderAllUI(); } else alert("Game exists"); } };
+        document.getElementById('addNoteBtn').onclick = addGameNote;
+        document.getElementById('clearCurrentGameNotesBtn').onclick = clearCurrentGameNotes;
+        document.getElementById('addSysNoteBtn').onclick = addSysNote;
+        document.getElementById('clearAllSysNotesBtn').onclick = clearAllSysNotes;
+        document.getElementById('addPersonalNoteBtn').onclick = addPersonalNote;
+        document.getElementById('clearPersonalNotesBtn').onclick = clearPersonalNotes;
+        document.getElementById('addMemberBtn').onclick = addMember;
+        document.getElementById('closeHistoryModal').onclick = () => document.getElementById('historyModal').style.display='none';
+        window.onclick = (e) => { if(e.target === document.getElementById('historyModal')) document.getElementById('historyModal').style.display='none'; };
+        bindImageUploads();
+    }
+    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g,m=> m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    function escapeHtmlAttr(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    // Theme switching
+    function initTheme() {
+        const savedTheme = localStorage.getItem('gamjus_theme');
+        if(savedTheme === 'light') {
+            document.body.classList.add('light');
+            document.getElementById('themeText').innerText = 'Light';
+            document.querySelector('#themeToggleBtn i').className = 'fas fa-sun';
+        } else {
+            document.body.classList.remove('light');
+            document.getElementById('themeText').innerText = 'Dark';
+            document.querySelector('#themeToggleBtn i').className = 'fas fa-moon';
+        }
+    }
+    function toggleTheme() {
+        if(document.body.classList.contains('light')) {
+            document.body.classList.remove('light');
+            localStorage.setItem('gamjus_theme', 'dark');
+            document.getElementById('themeText').innerText = 'Dark';
+            document.querySelector('#themeToggleBtn i').className = 'fas fa-moon';
+        } else {
+            document.body.classList.add('light');
+            localStorage.setItem('gamjus_theme', 'light');
+            document.getElementById('themeText').innerText = 'Light';
+            document.querySelector('#themeToggleBtn i').className = 'fas fa-sun';
+        }
+    }
+
+    initData();
+    const storedUser = sessionStorage.getItem('currentUser');
+    if(storedUser){ currentUser = JSON.parse(storedUser); if(!users.find(u=>u.id===currentUser.id)) currentUser=null; }
+    if(currentUser){ document.getElementById('loginOverlay').style.display='none'; document.getElementById('appMain').style.display='flex'; renderAllUI(); }
+    else { document.getElementById('loginOverlay').style.display='flex'; document.getElementById('appMain').style.display='none'; }
+    bindEvents(); setupMenuTabs(); initTheme();
+    document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+</script>
+</body>
+</html>
